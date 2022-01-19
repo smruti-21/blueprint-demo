@@ -1,0 +1,102 @@
+{% set tf_module_git_url = 'git@github.com:vmulasmob/terraform_modules.git' %}
+{% set vpc_module_repo = 'git@github.com:terraform-aws-modules/terraform-aws-vpc.git//?ref=v2.24.0' %}
+{% set transit_gateway = 'tgw-0e3f76e2bcbf85f78' %}
+
+env_settings:
+  terragrunt_modules_settings: &settings
+
+    global:
+      iam:
+        iam_repo: &iam_repo
+          "{{ tf_module_git_url }}//iam?ref=v0.3"
+
+        RoleAWSAlb:
+          repo: *iam_repo
+          tf_variables:
+            attach_policy_file: true
+            create_instance_profile: false
+
+    regional:
+      vpc_eks_1:
+        {% set tag_prefix = 'vpc-eks-1' %}
+        {% set cidr = "172.16.40.0/22" %}
+
+          networking:
+            tf_variables:
+              azs: ["{{ AWS_REGION }}a", "{{ AWS_REGION }}b", "{{ AWS_REGION }}c"]
+              cidr: {{ cidr }}
+              default_vpc_name: "{{ tag_prefix }}"
+              enable_nat_gateway: false
+              private_subnet_tags:
+                Name: "{{ tag_prefix }}-private-subnet"
+              private_subnets:
+                - "172.16.42.0/25"
+                - "172.16.42.128/25"
+                - "172.16.43.0/25"
+              public_subnet_tags:
+                Name: "{{ tag_prefix }}-public-subnet"
+              public_subnets:
+                - "172.16.40.0/25"
+                - "172.16.40.128/25"
+                - "172.16.41.0/25"
+              tag_prefix: {{ tag_prefix }}
+              tags:
+                Name: "{{ tag_prefix }}"
+
+          route_vpc_to_vpc:
+            tf_variables:
+              transit_gateway_id: "{{ transit_gateway }}"
+              dst_vpc_cidr_list:
+                - dest: "vpc_squid"
+                  cidr: "172.16.4.0/25"
+                - dest: "vpc_eks_2"
+                  cidr: "172.16.44.0/22"
+
+          transit_gateway_attachment:
+            tf_variables:
+              transit_gateway_id: "{{ transit_gateway }}"
+
+      vpc_eks_2:
+        {% set tag_prefix = 'vpc-eks-2' %}
+        {% set cidr = "172.16.44.0/22" %}
+
+          networking:
+            tf_variables:
+              azs: [ "{{ AWS_REGION }}a", "{{ AWS_REGION }}b", "{{ AWS_REGION }}c" ]
+              cidr: {{ cidr }}
+              default_vpc_name: "{{ tag_prefix }}"
+              enable_nat_gateway: false
+              private_subnet_tags:
+                Name: "{{ tag_prefix }}-private-subnet"
+              private_subnets:
+                - "172.16.46.0/25"
+                - "172.16.46.128/25"
+                - "172.16.47.0/25"
+              public_subnet_tags:
+                Name: "{{ tag_prefix }}-public-subnet"
+              public_subnets:
+                - "172.16.44.0/25"
+                - "172.16.44.128/25"
+                - "172.16.45.0/25"
+              tag_prefix: {{ tag_prefix }}
+              tags:
+                Name: "{{ tag_prefix }}"
+
+          route_vpc_to_vpc:
+            tf_variables:
+              transit_gateway_id: "{{ transit_gateway }}"
+              dst_vpc_cidr_list:
+                - dest: "vpc_squid"
+                  cidr: "172.16.4.0/25"
+                - dest: "vpc_eks_1"
+                  cidr: "172.16.40.0/22"
+
+          transit_gateway_attachment:
+            tf_variables:
+              transit_gateway_id: "{{ transit_gateway }}"
+  regions:
+    eu-west-1:
+      <<: [*settings]
+
+    eu-central-1:
+      <<: [*settings]
