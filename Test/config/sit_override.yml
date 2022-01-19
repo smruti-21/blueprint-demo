@@ -1,0 +1,67 @@
+{% set tf_module_git_url = 'git::https://github.com/terraform-aws-modules/' %}
+
+env_settings:
+  terragrunt_modules_settings: &settings
+
+    global:
+      iam:
+        demo_role:
+          tf_variables:
+            name: "demo-role"
+            assume_role: "ec2.amazonaws.com"
+            policy_file: "demo-s3-access-policy.json"
+            policy_assume_role_file: "policy-assume-role-generic.json"
+            attach_policy_file: true
+            create_instance_profile: true
+            path: "/demo/"
+
+    regional:
+      vpc_demo:
+        {% set tag_prefix = 'vpc-demo' %}
+        {% set cidr = "192.168.40.0/22" %}
+
+          networking:
+            tf_variables:
+              azs: ["{{ AWS_REGION }}a", "{{ AWS_REGION }}b", "{{ AWS_REGION }}c"]
+              cidr: {{ cidr }}
+              default_vpc_name: "{{ tag_prefix }}"
+              enable_nat_gateway: false
+              private_subnet_tags:
+                Name: "{{ tag_prefix }}-private-subnet"
+              private_subnets:
+                - "192.168.42.0/25"
+                - "192.168.42.128/25"
+                - "192.168.43.0/25"
+              public_subnet_tags:
+                Name: "{{ tag_prefix }}-public-subnet"
+              public_subnets:
+                - "192.168.40.0/25"
+                - "192.168.40.128/25"
+                - "192.168.41.0/25"
+              tag_prefix: {{ tag_prefix }}
+              tags:
+                Name: "{{ tag_prefix }}"
+
+          key_pair:
+            tf_variables:
+              name: "demo"
+
+          sec_group:
+            tf_variables:
+              name: "demo-sg"
+              ingress_cidr_blocks:
+                - 10.10.0.0/32
+
+          ec2:
+            tf_variables:
+              name: "demo-ec2-instance"
+              ami: "ami-08ca3fed11864d6bb"
+              instance_type: "t2.micro"
+              iam_instance_profile: "demo-role"
+
+  regions:
+    eu-west-1:
+      <<: [*settings]
+
+    eu-central-1:
+      <<: [*settings]

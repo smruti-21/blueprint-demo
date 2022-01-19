@@ -1,0 +1,23 @@
+{% set tf_module_git_url = 'git::https://github.com/terraform-aws-modules/' %}
+
+env_settings:
+  terragrunt_modules_settings: &settings
+
+    global:
+      iam:
+        demo_role:
+          tf_variables:
+            name: "demo-role"
+            assume_role: "ec2.amazonaws.com"
+            policy_file: "demo-s3-access-policy.json"
+            policy_assume_role_file: "policy-assume-role-generic.json"
+            attach_policy_file: true
+            create_instance_profile: true
+            path: "/demo/"
+
+  regions:
+    eu-west-1:
+      <<: [*settings]
+
+    eu-central-1:
+      <<: [*settings]

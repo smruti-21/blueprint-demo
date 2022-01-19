@@ -1,0 +1,25 @@
+common_vars:
+  # Classic DTAP
+  allowed_envs: &allowed_envs
+    - dev
+    - sit
+  allowed_regions: &allowed_regions
+    - eu-west-1
+    - eu-central-1
+  main_region: &main_region
+    - eu-west-1
+
+common_tags: &common_tags
+  Organization: "Mobiquity"
+  Terraform: "true"
+  InfraRepo: "https://github.com/smruti-21/blueprint-demo"
+  ManagedBy: "devops-europe@mobiquityinc.com"
+
+terragrunt_modules_settings:
+
+  global:
+    iam:
+      demo_role:
+        allowed_envs: *allowed_envs
+        allowed_regions: *main_region
+        repo: "git::https://github.com/smruti-21/terraform-aws-iam.git//modules/iam?ref=master"

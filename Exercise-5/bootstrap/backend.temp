@@ -1,0 +1,6 @@
+// Remove this block after the first init
+terraform {
+  backend "s3" {
+  }
+}
+

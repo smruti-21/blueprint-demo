@@ -1,0 +1,66 @@
+common_vars:
+  # Classic DTAP
+  allowed_envs: &allowed_envs
+    - dev
+    - sit
+  allowed_regions: &allowed_regions
+    - eu-west-1
+    - eu-central-1
+  main_region: &main_region
+    - eu-west-1
+
+common_tags: &common_tags
+  Organization: "Mobiquity"
+  Terraform: "true"
+  InfraRepo: "https://github.com/smruti-21/blueprint-demo"
+  ManagedBy: "devops-europe@mobiquityinc.com"
+
+terragrunt_modules_settings:
+
+  global:
+    iam:
+      demo_role:
+        allowed_envs: *allowed_envs
+        allowed_regions: *main_region
+        repo: "git::https://github.com/smruti-21/terraform-aws-iam.git//modules/iam?ref=master"
+
+
+  regional:
+    vpc_demo:
+      networking:
+        allowed_envs: *allowed_envs
+        allowed_regions: *allowed_regions
+        repo: "git::https://github.com/terraform-aws-modules/terraform-aws-vpc.git//?ref=v2.24.0"
+        tf_variables:
+          default_vpc_name: "vpc_demo"
+          enable_dns_hostnames: true
+          enable_ipv6: false
+          enable_nat_gateway: false
+          single_nat_gateway: false
+          tags:
+            <<: *common_tags
+
+      key_pair:
+        allowed_envs: *allowed_envs
+        allowed_regions: *allowed_regions
+        repo: "git::https://github.com/smruti-21/terraform-aws-iam.git//modules/key?ref=master"
+        tf_variables:
+          tags:
+            <<: *common_tags
+
+      sec_group:
+        allowed_envs: *allowed_envs
+        allowed_regions: *allowed_regions
+        repo: "git::https://github.com/terraform-aws-modules/terraform-aws-security-group.git//modules/ssh?ref=master"
+        tf_variables:
+          tags:
+            <<: *common_tags
+
+      ec2:
+        allowed_envs: *allowed_envs
+        allowed_regions: *allowed_regions
+        repo: "git::https://github.com/terraform-aws-modules/terraform-aws-ec2-instance.git//?ref=master"
+        tf_variables:
+          ami:
+          tags:
+            <<: *common_tags
